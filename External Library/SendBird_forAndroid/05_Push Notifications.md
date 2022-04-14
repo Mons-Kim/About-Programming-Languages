@@ -5,7 +5,9 @@
 
 
 
-### FCM 푸시 알림
+## FCM 푸시 알림
+
+### 1. 기본 세팅
 
 - 파이어베이스에서 일반적인 FCM 세팅 과정은 생략, Sendbird 서버에 연결하는 파트만 설명.
 
@@ -90,57 +92,92 @@
        }
    ```
 
-   
+
+
+
+### 2. 알림 활성화 설정
+
+```java
+public void setPushNotification(boolean enable) {
+  
+    if (enable) { // 알림 활성화
+        SendBird.registerPushTokenForCurrentUser(pushToken, new SendBird.RegisterPushTokenWithStatusHandler() {
+            @Override
+            public void onRegistered(SendBird.PushTokenRegistrationStatus status, SendBirdException e) {
+                if (e != null) {
+                    // Handle error.
+                }
+
+                ...
+            }
+        });
+    }
+    else { // 알림 해제
+      
+        // If you want to unregister the current device only, call this method.
+        SendBird.unregisterPushTokenForCurrentUser(pushToken, new SendBird.UnregisterPushTokenHandler() {
+            @Override
+            public void onUnregistered(SendBirdException e) {
+                if (e != null) {
+                    // Handle error.
+                }
+
+                ...
+            }
+        });
+
+        // If you want to unregister all devices of the user, call this method.
+        SendBird.unregisterPushTokenAllForCurrentUser(new SendBird.UnregisterPushTokenHandler() {
+            @Override
+            public void onUnregistered(SendBirdException e) {
+                if (e != null) {
+                    // Handle error.
+                }
+
+                ...
+            }
+        });
+    }
+}
+```
+
+
+
+### 3. 알림 상황 설정
+
+- 트리거 옵션
+  - ALL - 모든 메세지에 대해 알림
+  - MENTION_ONLY - 해당 유저가 언급된 메세지만 알림
+  - OFF - 알림하지 않음
+
+```java
+// If you want to trigger notification messages only when the current user is mentioned in messages.
+SendBird.setPushTriggerOption(SendBird.PushTriggerOption.MENTION_ONLY, new SendBird.SetPushTriggerOptionHandler() {
+    @Override
+    public void onResult(SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+}
+```
 
 
 
 
 
-### HMS 푸시알림
+## HMS 푸시알림
 
 - 생략, 필요한 사람은 아래 링크를 참조
 - https://sendbird.com/docs/chat/v3/android/guides/push-notifications#2-push-notifications-for-hms
 
-# 상수
 
 
+## 다중 기기 지원
 
-```swift
-let 상수명1: 자료형 = 초기값
-```
-
-```swift
-let a: Int 100
-```
-
-- 선언과 동시에 초기값 설정.
-
-  
-
-```swift
-let 상수명2: 자료형
-상수명2 = 초기값
-```
-
-```swift
-let b: Int
-b = 100
-```
-
-- 최초 한 번에 한해, 초기값 할당 가능.
-
-- 상수의 값을 읽기 전까지는 반드시 초기화가 이루어져야 함.
-
-  ```swift
-  let a: Int
-  a = 0
-  let b = a
-  // OK
-  ```
-
-    ```swift
-  let a: Int
-  let b = a // Error
-  a = 0
-    ```
-
+- 동시에 여러개의 기기에서 푸시알림을 받을 수 있도록 지원함.
+- 해당 세팅을 앱에 추가하려면 샌드버드 프로젝트의 기능외 푸시알림 설정을 지원할 수 없음. 다중 기기 지원을 위한 코드세팅에서 충돌이 남.
+- 해당 기능을 사용하려면 아래 주소 참조
+- https://sendbird.com/docs/chat/v3/android/guides/push-notifications-multi-device-support#2-push-notifications-for-fcm-3-step-6-enable-multi-device-support-in-the-dashboard
