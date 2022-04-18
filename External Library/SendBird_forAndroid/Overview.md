@@ -1,6 +1,7 @@
 # 개요
 
 - 이론적으로 숙지할 내용 기록
+- https://sendbird.com/docs/chat/v4/android/quickstart/send-first-message 참조
 
 
 

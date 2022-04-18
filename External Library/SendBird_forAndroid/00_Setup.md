@@ -1,99 +1,66 @@
-# 변수
+# Setup
 
 
 
-### 선언 방식
+## Requirements
 
-```swift
-var 변수명 : 자료형
-```
-
-```swift
-var num : Int
-var str : String
-var a, b, c : Int
-var a: Int, b: Float, c: String
-```
-
-- 변수명은 소문자로 시작이 관례.
-
-- 변수명은 영문자나 "_"로 시작할 수 있다. 숫자나 다른 특수문자로 시작 불가.
-
-- 유니코드로 표현할 수 있는 한글이나 이모티콘도 변수명으로 설정 가능. 가독성은 떨어짐
-
-- 두 개 이상의 단어로 구성된 이름은 <span style="color:red">lowerCamelCase</span> 규칙을 사용.
-
-- 헝가리안 표기법을 사용하지 않음.
-
-- 예약어는 변수명으로 사용할 수 없음.
-
-  - 예약어를 '로 감싸주면 식별자 이름으로 사용할 수 있음
-
-    ```swift
-    var 'if' = 123;
-    print('if')
-    // 123
-    ```
-
-    
-
-### 초기화
-
-```swift
-var a: Int = 0
-```
-
-- 선언과 동시에 데이터값 설정.
-
-```swift
-var a: Int
-a = 0
-```
-
-- 선언후, 데이터값 설정.
+- Android 4.1 (API level 16) or higher
+- Java 7 or higher
+- Android Gradle plugin 3.4.0 or higher
 
 
 
-# 상수
+## Sendbird 설정
+
+- Sendbird계정의 대시보드에서 프로젝트를 위한 Sendbird Application을 생성
+- 프로젝트와 Sendbird서버를 연결하기 위해 해당 application에 할당된 App ID가 필요함
 
 
 
-```swift
-let 상수명1: 자료형 = 초기값
-```
+## 프로젝트 설정
 
-```swift
-let a: Int 100
-```
+1. repository 설정
 
-- 선언과 동시에 초기값 설정.
+   - Gradle 6.7 이하
 
-  
+     ```build.gradle(application)
+     allprojects {
+         repositories {
+             maven { url "https://repo.sendbird.com/public/maven" }
+         }
+     }
+     ```
 
-```swift
-let 상수명2: 자료형
-상수명2 = 초기값
-```
+   - Gradle 6.8 이상
 
-```swift
-let b: Int
-b = 100
-```
+     ```settings.gradle
+     dependencyResolutionManagement {
+         repositories {
+             maven { url "https://repo.sendbird.com/public/maven" }
+         }
+     }
+     ```
 
-- 최초 한 번에 한해, 초기값 할당 가능.
+2. 라이브러리 연동
 
-- 상수의 값을 읽기 전까지는 반드시 초기화가 이루어져야 함.
+   ```build.gradle(module)
+   dependencies {
+       implementation 'com.sendbird.sdk:sendbird-android-sdk:3.1.7'
+   }
+   ```
 
-  ```swift
-  let a: Int
-  a = 0
-  let b = a
-  // OK
-  ```
+3. Permission 설정
 
-    ```swift
-  let a: Int
-  let b = a // Error
-  a = 0
-    ```
+   ```AndroidManifest.xml
+   <uses-permission android:name="android.permission.INTERNET" />
+   ```
 
+4. (옵션) proguard 설정 
+
+5. - "build.gradle(module)"에서 minifyEnabled true로 설정되어 있으면
+
+   ```proguard-rules.pro
+   -dontwarn com.sendbird.android.shadow.**
+   ```
+
+   

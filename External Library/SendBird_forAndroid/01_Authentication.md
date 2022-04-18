@@ -2,10 +2,27 @@
 
 
 
-### Sendbird SDK 초기화
+## Sendbird SDK 초기화
 
 ```java
-SendBird.init(String appId, Context context, boolean useCaching, @NonNull final InitResultHandler handler)
+boolean useCaching = true;
+// When the useLocalCaching is set to true.
+SendBird.init(APP_ID, getApplicationContext(), useCaching, new InitResultHandler() {
+    @Override
+    public void onMigrationStarted() {
+        Log.i("Application", "Called when there's an update in Sendbird server.");
+    }
+
+    @Override
+    public void onInitFailed(SendBirdException e) {
+        Log.i("Application", "Called when initialize failed. SDK will still operate properly as if useLocalCaching is set to false.");
+    }
+
+    @Override
+    public void onInitSucceed() {
+        Log.i("Application", "Called when initialization is completed.");
+    }
+});
 ```
 
 - 해당 메소드는 Application클래스에서 선언할 것. OnCreate()에서 선언.
@@ -16,31 +33,81 @@ SendBird.init(String appId, Context context, boolean useCaching, @NonNull final 
 
 
 
-### 로그인
+## 로그인
 
 ```java
-SendBird.connect(String userId, SendBird.ConnectHandler handler)
+// When the useLocalCaching is set to true.
+SendBird.connect(userId, new SendBird.ConnectHandler() {
+    @Override
+    public void onConnected(User user, SendBirdException e) {
+        if (user != null) {
+            if (e != null) {
+                // Proceed in offline mode with the data stored in the local database.
+                // Later, connection will be made automatically
+                // and can be notified through the ConnectionHandler.onReconnectSucceeded().
+            } else {
+                // Proceed in online mode.
+            }
+        } else {
+            // Handle error.
+        }
+    }
+});
 ```
 
-- 변수명은 소문자로 시작이 관례.
+- 로그인시, 엑세스 토큰이나 세션 토큰을 이용하는 방법이 있지만, 토큰의 발행은 Android SDK에서 실행 불가. 토큰 발행을 하려면 Platform API를 이용해야 하기 때문에, 여기서는 해당 방법은 생략함. 사용을 원하면 아래를 참조할 것.
 
-- 변수명은 영문자나 "_"로 시작할 수 있다. 숫자나 다른 특수문자로 시작 불가.
+  (https://sendbird.com/docs/chat/v3/android/guides/authentication#2-connect-to-sendbird-server-with-a-user-id-and-a-token)
 
-- 유니코드로 표현할 수 있는 한글이나 이모티콘도 변수명으로 설정 가능. 가독성은 떨어짐
 
-- 두 개 이상의 단어로 구성된 이름은 <span style="color:red">lowerCamelCase</span> 규칙을 사용.
 
-- 헝가리안 표기법을 사용하지 않음.
+## 로그아웃
 
-- 예약어는 변수명으로 사용할 수 없음.
+- 이벤트 핸들러를 통한 수신 중지, 내부 캐시 데이터 삭제됨
 
-  - 예약어를 '로 감싸주면 식별자 이름으로 사용할 수 있음
+```java
+SendBird.disconnect(new SendBird.DisconnectHandler() {
+    @Override
+    public void onDisconnected() {
+        // The current user is disconnected from Sendbird server.
+        ...
+    }
+});
+```
 
-    ```swift
-    var 'if' = 123;
-    print('if')
-    // 123
-    ```
 
-    
+
+## 프로필 수정
+
+```java
+SendBird.updateCurrentUserInfo(NICKNAME, PROFILE_URL, new UserInfoUpdateHandler() {
+    @Override
+    public void onUpdated(SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // The current user's profile is successfully updated.
+        // You could redraw the profile in a view in response to this operation.
+        ...
+    }
+});
+```
+
+- 프로필 사진 직접 업로드
+
+```java
+SendBird.updateCurrentUserInfoWithProfileImage(NICKNAME, PROFILE_FILE, new UserInfoUpdateHandler() {
+    @Override
+    public void onUpdated(SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // A new profile images is successfully uploaded to Sendbird server.
+        // You could redraw the profile in a view in response to this operation.
+        ...
+    }
+});
+```
 
