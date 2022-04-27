@@ -119,45 +119,146 @@ groupChannel.sendFileMessage(params, new BaseChannel.SendFileMessageHandler() {
 | MentionedUserIds               | MentionType.USERS일 떄 멘션할 유저ID 리스트                  |
 | PushNotificationDeliveryOption | 푸시 알림 옵션 (DEFAULT: 푸시 발송 / SUPPRESS: 푸시 발송 안함) |
 
+
+
 ## IOS기기에 중요한 경고 메세지 보내기
 
 ```java
+// Send a critical alert user message.
+final UserMessageParams userMessageParams = new UserMessageParams();
+final AppleCriticalAlertOptions options = new AppleCriticalAlertOptions("name", 0.7); // Acceptable values for `volume` range from 0 to 1.0, inclusive.
+userMessageParams.setAppleCriticalAlertOptions(options);
 
+groupChannel.sendUserMessage(userMessageParams, new BaseChannel.SendUserMessageHandler() {
+    @Override
+    public void onSent(UserMessage message, SendBirdException e) {
+        // Handle error.
+    }
+});
 ```
 
 
 
 ## 채널 이벤트 핸들러를 통해 메세지 수신
 
-```java
+- 메세지 타입
+  - UserMessage
+  - FileMessage
+  - AdminMessage
+- UNIQUE_HANDLER_ID - 핸들러를 등록하는 고유 식별자
 
+```java
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+    @Override
+    public void onMessageReceived(BaseChannel channel, BaseMessage message) {
+        // You can customize how to display the different types of messages with the result object in the "message" parameter.
+        if (message instanceof UserMessage) {
+            ...
+        } else if (message instanceof FileMessage) {
+            ...
+        } else if (message instanceof AdminMessage) {
+            ...
+        }
+    }
+});
+```
+
+- 더이상 유효하지 않은 경우 핸들러 제거
+
+```java
+SendBird.removeChannelHandler(UNIQUE_HANDLER_ID);
 ```
 
 
 
-## 문자 메세지로 답장
+## 텍스트 메세지로 답장
 
 ```java
+// Create a `UserMessageParams` object.
+UserMessageParams params = new UserMessageParams();
+params.setParentMessageId(PARENT_MESSAGE_ID);
+...
 
+// Pass the params to the parameter of the `sendUserMessage()` method.
+groupChannel.sendUserMessage(params, new BaseChannel.SendUserMessageHandler() {
+    @Override
+    public void onSent(UserMessage userMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // A reply to a specific message in the form of a text message is successfully sent.
+        ...
+    }
+});
 ```
+
+- PARENT_MESSAGE_ID - 답장할 상위 메세지의 고유 ID를 지정
 
 
 
 ## 파일 메세지로 답장
 
 ```java
+// Create a `FileMessageParams` object.
+FileMessageParams params = new FileMessageParams();
+params.setParentMessageId(PARENT_MESSAGE_ID);
+...
 
+// Pass the params to the parameter in the `sendFileMessage()` method.
+groupChannel.sendFileMessage(params, new BaseChannel.SendFileMessageHandler() {
+    @Override
+    public void onSent(FileMessage userMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // A reply to a specific message in the form of a file message is successfully sent.
+        ...
+    }
+});
 ```
 
+- PARENT_MESSAGE_ID - 답장할 상위 메세지의 고유 ID를 지정
 
 
-## 메세지에 반응
+
+## 메세지에 리액션 추가
 
 ```java
+String emojiKey = "smile";
 
+// The BASE_MESSAGE below indicates a BaseMessage object to add a reaction to.
+groupChannel.addReaction(BASE_MESSAGE, emojiKey, new BaseChannel.ReactionHandler() {
+    @Override
+    public void onResult(ReactionEvent reactionEvent, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+});
+
+// The BASE_MESSAGE below indicates a BaseMessage object to delete a reaction from.
+groupChannel.deleteReaction(BASE_MESSAGE, emojiKey, new BaseChannel.ReactionHandler() {
+    @Override
+    public void onResult(ReactionEvent reactionEvent, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+});
+
+// Note: To add or remove the emoji of which key matches 'smile' below the message on the current user's chat view,
+// the applyReactionEvent() method should be called in the channel event handler's onReactionUpdated() method.
 ```
 
+- 리액션 기능은 현재 그룹채널에서만 가능함
 
+  
 
 ## 상위 메세지의 답장 나열
 
