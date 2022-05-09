@@ -263,23 +263,131 @@ groupChannel.deleteReaction(BASE_MESSAGE, emojiKey, new BaseChannel.ReactionHand
 ## 상위 메세지의 답장 나열
 
 ```java
+// Create a `ThreadMessageListParams` object.
+ThreadMessageListParams params = new ThreadMessageListParams();
+params.setPreviousResultSize(PREV_RESULT_SIZE);
+params.setNextResultSize(NEXT_RESULT_SIZE);
+params.setInclusive(INCLUSIVE);
+params.setReverse(REVERSE);
+params.setMessagePayloadFilter();
+...
 
+// Pass the params as an argument to the parameter in the `getThreadedMessagesByTimestamp()` method.
+parentMessage.getThreadedMessagesByTimestamp(TIMESTAMP, params, new BaseMessage.GetThreadedMessagesHandler() {
+    @Override
+    public void onResult(BaseMessage parentMessage, List<BaseMessage> messages, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // A list of replies of the specified parent message timestamp is successfully retrieved.
+        ...
+    }
+});
 ```
+
+| Argument                      | Type      | Description                                          |
+| :---------------------------- | :-------- | :--------------------------------------------------- |
+| `TIMESTAMP`                   | long long | 검색의 기준이 될 타임스탬프                          |
+| `PREV_RESULT_SIZE`            | int       | 지정된 타임스탬프 이전의 검색 메세지 수              |
+| `NEXT_RESULT_SIZE`            | int       | 지정된 타임스탬프 이후의 검색 메세지 수              |
+| `INCLUSIVE`                   | boolean   | 지정된 타임스탬프와 일치하는 시각의 메세지 포함 여부 |
+| `REVERSE`                     | boolean   | 검색된 메세지의 역순 정렬 여부                       |
+| `INCLUDE_PARENT_MESSAGE_INFO` | boolean   | 상위 메세지의 정보 포함 여부  (Default: **false**)   |
 
 
 
 ## 메세지 검색
 
 ```java
+// Create a `MessageRetrievalParams` object.
+MessageRetrievalParams params = new MessageRetrievalParams(CHANNEL_URL, CHANNEL_TYPE, MESSAGE_ID);
+...
 
+// Pass the params as an argument to the parameter in the `getMessage()` method.
+BaseMessage.getMessage(params, new BaseMessage.GetMessageHandler() {
+    @Override
+    public void onResult(BaseMessage message, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // The specified message is successfully retrieved.
+        ...
+    }
+});
 ```
+
+| Argument       | Type                    | Description             |
+| :------------- | :---------------------- | :---------------------- |
+| `CHANNEL_URL`  | String                  | 검색할 채널의 URL       |
+| `CHANNEL_TYPE` | BaseChannel.ChannelType | 검색 채널 타입          |
+| `MESSAGE_ID`   | long                    | 검색할 메시지의 고유 ID |
 
 
 
 ## 메세지 업데이트
 
 ```java
+UserMessageParams params = new UserMessageParams()
+        .setMessage(NEW_TEXT_MESSAGE)
+        .setCustomType(NEW_CUSTOM_TYPE)
+        .setData(NEW_DATA);
 
+// The MESSAGE_ID below indicates the unique message ID of a UserMessage object to update.
+groupChannel.updateUserMessage(MESSAGE_ID, params, new BaseChannel.UpdateUserMessageHandler() {
+    @Override
+    public void onUpdated(UserMessage userMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // The message is successfully updated.
+        // Through the "userMessage" parameter of the onUpdated() callback method,
+        // you could check if the update operation has been performed right.
+        String text = userMessage.getMessage();
+        ...
+    }
+});
+```
+
+```java
+FileMessageParams params = new FileMessageParams()
+        .setFileURL(NEW_FILE_URL)       // The file in a message can't be updated.
+        .setFileName(NEW_FILE_NAME)
+        .setFileSize(NEW_FILE_SIZE)
+        .setCustomType(NEW_CUSTOM_TYPE);
+
+// The MESSAGE_ID below indicates the unique message ID of a FileMessage object to update.
+groupChannel.updateFileMessage(MESSAGE_ID, params, new BaseChannel.UpdateFileMessageHandler() {
+    @Override
+    public void onUpdated(FileMessage fileMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // The message is successfully updated.
+        // Through the "fileMessage" parameter of the onUpdated() callback method,
+        // you could check if the update operation has been performed right.
+        String customType = fileMessage.getCustomType();
+        ...
+    }
+});
+```
+
+- 메세지 업데이트 핸들러
+
+```java
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+    ...
+
+    @Override
+    public void onMessageUpdated(BaseChannel channel, long messageId) {
+        ...
+    }
+
+    ...
+});
 ```
 
 
@@ -287,7 +395,33 @@ groupChannel.deleteReaction(BASE_MESSAGE, emojiKey, new BaseChannel.ReactionHand
 ## 메세지 삭제
 
 ```java
+// The BASE_MESSAGE below indicates a BaseMessage object to delete.
+groupChannel.deleteMessage(BASE_MESSAGE, new BaseChannel.DeleteMessageHandler() {
+    @Override
+    public void onResult(SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
 
+        // The message is successfully deleted from the channel.
+        ...
+    }
+});
+```
+
+- 메세지 삭제 핸들러
+
+```java
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+    ...
+
+    @Override
+    public void onMessageDeleted(BaseChannel channel, long messageId) {
+        ...
+    }
+
+    ...
+});
 ```
 
 
@@ -295,8 +429,39 @@ groupChannel.deleteReaction(BASE_MESSAGE, emojiKey, new BaseChannel.ReactionHand
 ## 메세지 복사
 
 ```java
+groupChannel.copyUserMessage(TARGET_CHANNEL, MESSAGE_TO_COPY, new BaseChannel.CopyUserMessageHandler() {
+    @Override
+    public void onCopied(UserMessage userMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // The message is successfully copied to the target channel.
+        ...
+    }
+});
+```
+
+```java
+groupChannel.copyFileMessage(TARGET_CHANNEL, MESSAGE_TO_COPY, new BaseChannel.CopyFileMessageHandler() {
+    @Override
+    public void onCopied(FileMessage fileMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // The message is successfully copied to the target channel.
+        ...
+    }
+});
 
 ```
+
+| Argument          | Type      | Description                                                  |
+| :---------------- | :-------- | :----------------------------------------------------------- |
+| `TARGET_CHANNEL`  | object    | Specifies a target channel to send a copied message to.      |
+| `MESSAGE_TO_COPY` | object    | Specifies a message to copy.                                 |
+| `HANDLER`         | interface | Specifies the handler interface which contains the `onCopied()` callback method to receive the response from Sendbird server for a message copy request. |
 
 
 
