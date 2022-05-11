@@ -468,15 +468,94 @@ groupChannel.copyFileMessage(TARGET_CHANNEL, MESSAGE_TO_COPY, new BaseChannel.Co
 ## 다른 회원에게 입력중 표시 보내기
 
 ```java
+groupChannel.startTyping();
+groupChannel.endTyping();
+...
 
+// To listen to an update from all the other channel members' client apps, implement the onTypingStatusUpdated() with things to do when notified.
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+     @Override
+     public void onTypingStatusUpdated(GroupChannel groupChannel) {
+        if (currentGroupChannel.getUrl().equals(groupChannel.getUrl())) {
+            List<User> members = groupChannel.getTypingMembers();
+
+            // Refresh typing status of members within the channel.
+            ...
+        }
+     }
+});
 ```
 
 
 
 ## 메세지 전달 완료 표시
 
-```java
+- Using a static method
 
+```java
+public class FirebaseMessagingServiceEx extends FirebaseMessagingService {
+    @Override
+    public void onMessageReceived(RemoteMessage remoteMessage) {
+        try {
+            JSONObject sendBird = new JSONObject(remoteMessage.getData().get("sendbird"));
+            JSONObject channel = (JSONObject) sendBird.get("channel");
+            String channelUrl = (String) channel.get("channel_url");
+
+            // Implement the following.
+            SendBird.markAsDelivered(channelUrl);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+- Using an instance method
+
+```java
+public class FirebaseMessagingServiceEx extends FirebaseMessagingService {
+    @Override
+    public void onMessageReceived(RemoteMessage remoteMessage) {
+        try {
+            JSONObject sendBird = new JSONObject(remoteMessage.getData().get("sendbird"));
+            JSONObject channel = (JSONObject) sendBird.get("channel");
+            String channelUrl = (String) channel.get("channel_url");
+
+            GroupChannel.getChannel(channelUrl, new GroupChannel.GroupChannelGetHandler() {
+                @Override
+                public void onResult(GroupChannel channel, SendBirdException e){
+                    if (channel != null) {
+                        // Implement the following.
+                        channel.markAsDelivered();
+                    }
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendNotification(FirebaseMessagingServiceEx firebaseMessagingServiceEx, String message, String channelUrl) {
+        // Send notifications for messages here.
+        ...
+    }
+}
+```
+
+- 온라인 채널 유저는 채널 이벤트 핸들러를 통해, onDeliveryReceiptUpdated()로 수신을 통지하고, 오프라인 유저는 SendBird.markAsDelivered() 메소드를 통해 푸시알림으로 전달됨
+
+```java
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+    @Override
+    public void onMessageReceived(BaseChannel baseChannel, BaseMessage baseMessage) {
+        ...
+    }
+
+    @Override
+    public void onDeliveryReceiptUpdated(GroupChannel channel) {
+        ...
+    }
+});
 ```
 
 
