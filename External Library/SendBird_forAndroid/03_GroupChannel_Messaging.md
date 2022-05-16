@@ -563,23 +563,55 @@ SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
 ## 메세지 읽음 표시
 
 ```java
+// Call the 'markAsRead()' when the current user views unread messages in a group channel.
+groupChannel.markAsRead();
+...
 
+// To listen to an update from all the other channel members' client apps, implement the onReadReceiptUpdated() with things to do when notified.
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+    @Override
+    public void onReadReceiptUpdated(GroupChannel groupChannel) {
+        if (currentGroupChannel.getUrl().equals(groupChannel.getUrl())) {
+            // For example, code for redrawing a channel view.
+        }
+
+        ...
+    }
+});
 ```
 
+- markAsReadAll()은 사용자가 가입한 모든 그룹채널의 읽지 않은 메세지들을 모두 업데이트함.
 
+  
 
 ## 메세지를 받지 못한 회원 수 검색
 
 ```java
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+    @Override
+    public void onMessageReceived(BaseChannel baseChannel, BaseMessage baseMessage) {
+        ...
+    }
 
+    @Override
+    public void onDeliveryReceiptUpdated(GroupChannel channel) {
+        Boolean isAllDelivered = channel.getUndeliveredMemberCount(MESSAGE) == 0;
+
+        ...
+    }
+
+    ...
+});
 ```
+
+- getUndeliveredMemberCount()가 0이면 모두 읽은 상태
 
 
 
 ## 메세지를 읽은 회원 검색
 
 ```java
-
+List<User> readMembers = groupChannel.getReadMembers(MESSAGE);
 ```
 
 
@@ -587,15 +619,38 @@ SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
 ## 메세지를 읽지 않은 회원수 검색
 
 ```java
+// Call the markAsRead() when the current user views unread messages in a group channel.
+groupChannel.markAsRead();
+...
 
+// To listen to an update from all the other channel members' client apps, implement the onReadReceiptUpdated() with things to do when notified.
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+    @Override
+    public void onReadReceiptUpdated(GroupChannel groupChannel) {
+        if (currentGroupChannel.getUrl().equals(groupChannel.getUrl())) {
+            ...
+
+            for (BaseMessage message : messages) {
+                int unreadCount = groupChannel.getReadReceipt(message);
+                if (unreadCount <= 0) {
+                    // All members have read the message.
+                } else {
+                    // Some of members haven't read the message yet.
+                }
+            }
+        }
+    }
+});
 ```
+
+- getReadReceipt() - 해당 메세지를 읽지 않은 유저수를 출력
 
 
 
 ## 채널의 마지막 메세지 검색
 
 ```java
-
+BaseMessage lastMessage = groupChannel.getLastMessage();
 ```
 
 
@@ -603,15 +658,26 @@ SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
 ## 채널에세 읽지 않은 메세지 수 검색
 
 ```java
-
+int unreadMessageCount = groupChannel.getUnreadMessageCount();
 ```
+
+- 현재 사용자가 해당 그룹채널에서 읽지 않은 메세지 수
 
 
 
 ## 모든 채널에서 읽지 않은 메세지 수 검색
 
 ```java
+SendBird.getTotalUnreadMessageCount(new GroupChannel.GroupChannelTotalUnreadMessageCountHandler() {
+    @Override
+    public void onResult(int totalUnreadMessageCount, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
 
+        ...
+    }
+});
 ```
 
 
@@ -619,23 +685,107 @@ SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
 ## 읽지 않은 메세지가 있는 채널 수 검색
 
 ```java
+SendBird.getTotalUnreadChannelCount(new GroupChannel.GroupChannelTotalUnreadChannelCountHandler() {
+    @Override
+    public void onResult(int totalUnreadChannelCount, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
 
+        ...
+    }
+});
 ```
 
 
 
 ## 관리자 메세지 보내기
 
-```java
-
-```
+- [센드버드 대시보드](https://dashboard.sendbird.com/)또는[채팅 플랫폼 API](https://sendbird.com/docs/chat/v3/platform-api/message/messaging-basics/send-a-message)을 사용하여 그룹 채널에 관리자 메세지를 보낼 수 있음. **채팅** > **그룹 채널** 로 이동하고 그룹 채널 을 선택하고 아래 메시지 상자를 찾아 **관리자 메시지** 탭을 클릭한 다음 상자에 메시지를 작성합니다. 관리자 메시지는 **1,000** 자로 제한
+- 관리자 메세지에 대한 푸시 알림 기본적으로 사용 불가. 
 
 
 
 ## 메세지에 메타데이터 추가
 
 ```java
+// When a message has been successfully sent to a channel, create items with keys.
+List<String> itemKeysToCreate = new ArrayList<>();
+itemKeysToCreate.add("referees");
+itemKeysToCreate.add("games");
 
+groupChannel.createMessageMetaArrayKeys(BASE_MESSAGE, itemKeysToCreate, new BaseChannel.MessageMetaArrayHandler() {
+    @Override
+    public void onResult(BaseMessage baseMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+});
+
+// Adding values to specific items by their keys.
+List<String> people = new ArrayList<>();
+people.add("John");
+people.add("Brandon");
+people.add("Harry");
+people.add("Jay");
+
+List<String> events = new ArrayList<>();
+events.add("soccer");
+events.add("baseball");
+events.add("basketball");
+
+Map<String, List<String>> valuesToAdd = new HashMap<>();
+valuesToAdd.put("referees", people);
+valuesToAdd.put("games", events);
+
+groupChannel.addMessageMetaArrayValues(BASE_MESSAGE, valuesToAdd, new BaseChannel.MessageMetaArrayHandler() {
+    @Override
+    public void onResult(BaseMessage baseMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+});
+
+// Removing existing values of specific items by their keys.
+List<String> notAvailablePeople = new ArrayList<>();
+notAvailablePeople.add("Brandon");
+notAvailablePeople.add("Jay");
+
+Map<String, List<String>> valuesToRemove = new HashMap<>();
+valuesToRemove.put("referees", notAvailablePeople);
+
+groupChannel.removeMessageMetaArrayValues(BASE_MESSAGE, valuesToRemove, new BaseChannel.MessageMetaArrayHandler() {
+    @Override
+    public void onResult(BaseMessage baseMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+});
+
+// Deleting items by their keys.
+List<String> itemKeysToDelete = new ArrayList<>();
+itemKeysToDelete.add("referees");
+itemKeysToDelete.add("games");
+
+groupChannel.deleteMessageMetaArrayKeys(BASE_MESSAGE, itemKeysToDelete, new BaseChannel.MessageMetaArrayHandler() {
+    @Override
+    public void onResult(BaseMessage baseMessage, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+});
 ```
 
 
