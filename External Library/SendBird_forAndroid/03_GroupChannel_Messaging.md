@@ -2,6 +2,84 @@
 
 
 
+https://sendbird.com/docs/chat/v3/android/guides/group-channel
+
+https://sendbird.com/docs/chat/v3/android/guides/group-channel-advanced#2-search-messages-by-keyword
+
+---
+
+## 목차
+
+---
+
+[메세지 보내기](#메세지 보내기)
+
+[메세지 파라미터](#메세지 파라미터)
+
+[IOS기기에 중요한 경고 메세지 보내기](#IOS기기에 중요한 경고 메세지 보내기)
+
+[채널 이벤트 핸들러를 통해 메세지 수신](#채널 이벤트 핸들러를 통해 메세지 수신)
+
+[텍스트 메세지로 답장](#텍스트 메세지로 답장)
+
+[파일 메세지로 답장](#파일 메세지로 답장)
+
+[메세지에 리액션 추가](#메세지에 리액션 추가)
+
+[상위 메세지의 답장 나열메세지 검색](#상위 메세지의 답장 나열메세지 검색)
+
+[메세지 업데이트](#메세지 업데이트)
+
+[메세지 삭제](#메세지 삭제)
+
+[메세지 복사](#메세지 복사)
+
+[다른 회원에게 입력중 표시 보내기](#다른 회원에게 입력중 표시 보내기)
+
+[메세지 전달 완료 표시](#메세지 전달 완료 표시)
+
+[메세지 읽음 표시](#메세지 읽음 표시)
+
+[메세지를 받지 못한 회원 수 검색](#메세지를 받지 못한 회원 수 검색)
+
+[메세지를 읽은 회원 검색](#메세지를 읽은 회원 검색)
+
+[메세지를 읽지 않은 회원수 검색](#메세지를 읽지 않은 회원수 검색)
+
+[채널의 마지막 메세지 검색](#채널의 마지막 메세지 검색)
+
+[채널에세 읽지 않은 메세지 수 검색](#채널에세 읽지 않은 메세지 수 검색)
+
+[모든 채널에서 읽지 않은 메세지 수 검색](#모든 채널에서 읽지 않은 메세지 수 검색)
+
+[읽지 않은 메세지가 있는 채널 수 검색](#읽지 않은 메세지가 있는 채널 수 검색)
+
+[관리자 메세지 보내기](#관리자 메세지 보내기)
+
+[메세지에 메타데이터 추가](#메세지에 메타데이터 추가)
+
+[메세지에 url링크 표시](#메세지에 url링크 표시)
+
+[키워드로 메세지 검색](#키워드로 메세지 검색)
+
+[파일 메세지의 썸네일 생성](#파일 메세지의 썸네일 생성)
+
+[핸들러를 사용하여 파일 업로드 진행 상황 추적](#핸들러를 사용하여 파일 업로드 진행 상황 추적)
+
+[진행 중인 파일 업로드 취소](#진행 중인 파일 업로드 취소)
+
+[암호화된 파일을 다른 회원과 공유](#암호화된 파일을 다른 회원과 공유)
+
+[메세지 Flood 방지](#메세지 Flood 방지)
+
+[메세지 자동 번역](#메세지 자동 번역)
+
+[메세지 번역 요청](#메세지 번역 요청)
+
+---
+
+
+
 ## 메세지 보내기
 
 | Message type                                                 | Description                                                  |
@@ -801,8 +879,50 @@ groupChannel.deleteMessageMetaArrayKeys(BASE_MESSAGE, itemKeysToDelete, new Base
 ## 키워드로 메세지 검색
 
 ```java
-
+MessageSearchQuery query = new MessageSearchQuery.Builder()
+    .setKeyword("Sendbird")
+    .setLimit(10)
+     ∙∙∙
+    .build();
 ```
+
+```java
+query.next(new MessageSearchQuery.MessageSearchQueryResultHandler() {
+    @Override
+    public void onResult(List<BaseMessage> list, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+});
+```
+
+- 다음 페이지 검색
+
+```java
+public boolean hasNext()
+```
+
+- 검색 결과 로딩중인지 체크 가능
+
+```java
+public boolean isLoading()
+```
+
+| Parameter name       | Type    | Description                                                  |
+| :------------------- | :------ | :----------------------------------------------------------- |
+| keyword              | string  | 검색 키워드 지정. 특수문자나 구두점이 포함되면 오류 반환     |
+| channelUrl           | string  | 검색할 채얼의 URL을 지정                                     |
+| channelCustomType    | string  | custom channel type 지정                                     |
+| limit                | int     | 페이지당 검색 개수 지정 (Default: **20**)                    |
+| exactMatch           | boolean | 완전히 일치하는 메세지만 검색. false는 부분 일치 항목도 검색됨 (Default: **false**) |
+| advancedQuery        | boolean | wildcard, fuzzy search, logical operators, and synonym search와 같은 복잡한 메세지 검색 기능을 수행할 지 결정 (Default: **false**) |
+| messageTimestampFrom | long    | 지정된 타임스탬프 이후에 전송된 메세지만 검색 (Default: **0**) |
+| messageTimestampTo   | long    | 지정된 타임스탬프 이전에 전송된 메세지만 검색 (Default: **Long.MAX_VALUE**) |
+| order                | enum    | 정렬 기준 필드 결정. (**SCORE** / **TIMESTAMP** 중 하나) (Default: **SCORE**) |
+| reverse              | boolean | 결과 정렬 순서를 역순으로 할 것인지 결정. false가 내림차순 (Default: **false**) |
 
 
 
@@ -817,7 +937,27 @@ groupChannel.deleteMessageMetaArrayKeys(BASE_MESSAGE, itemKeysToDelete, new Base
 ## 핸들러를 사용하여 파일 업로드 진행 상황 추적
 
 ```java
+FileMessageParams params = new FileMessageParams(FILE)
+        .setFileName(FILE_NAME)
+        .setData(DATA)
+        .setCustomType(CUSTOM_TYPE);
 
+FileMessage fileMessage = groupChannel.sendFileMessage(params, new BaseChannel.SendFileMessageWithProgressHandler() {
+    @Override
+    public void onProgress(int bytesSent, int totalBytesSent, int totalBytesToSend) {   // Check progress of file upload here.
+        int percent = (totalBytesSent * 100) / totalBytesToSend;
+    }
+
+    @Override
+    public void onSent(FileMessage message, SendBirdException e) {
+        if (e != null) {
+            // Handle error
+        }
+
+        // Do something with the sent file message.
+        ...
+    }
+});
 ```
 
 
@@ -825,7 +965,20 @@ groupChannel.deleteMessageMetaArrayKeys(BASE_MESSAGE, itemKeysToDelete, new Base
 ## 진행 중인 파일 업로드 취소
 
 ```java
+FileMessageParams params = new FileMessageParams(FILE)
+        .setFileName(FILE_NAME)
+        .setData(DATA)
+        .setCustomType(CUSTOM_TYPE);
 
+FileMessage fileMessage = groupChannel.sendFileMessage(params, new BaseChannel.SendFileMessageHandler() {
+    @Override
+    public void onSent(FileMessage fileMessage, SendBirdException e) {
+        ...
+    }
+});
+
+// Cancel uploading a file in the file message.
+boolean isCanceled = groupChannel.cancelFileMessageUpload(fileMessage.getRequestId());
 ```
 
 
