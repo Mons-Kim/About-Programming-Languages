@@ -1,5 +1,65 @@
 # Group Channel
 
+---
+
+## 목차
+
+---
+
+[채널 생성](#채널 생성)
+
+[Url로 채널 검색](#Url로 채널 검색)
+
+[멤버 초대](#멤버 초대)
+
+[초대 수락/거절](#초대 수락/거절)
+
+[채널에 회원으로 참가](#채널에 회원으로 참가)
+
+[채널 나가기](#채널 나가기)
+
+[채널 정지/해제](#채널 정지/해제)
+
+[채널 삭제](#채널 삭제)
+
+[채널 리스트 검색](#채널 리스트 검색)
+
+[채널 숨김/표시](#채널 숨김/표시)
+
+[이전 메세지 로드](#이전 메세지 로드)
+
+[타임스탬프로 메세지 로드](#타임스탬프로 메세지 로드)
+
+[메세지 ID별로 메세지 로드](#메세지 ID별로 메세지 로드)
+
+[타임스탬프/메세지ID별로 검색한 메세지 파라미터](#타임스탬프/메세지ID별로 검색한 메세지 파라미터)
+
+[채팅 기록 기우기](#채팅 기록 기우기)
+
+[채널 데이터 새로 고침](#채널 데이터 새로 고침)
+
+[모든 구성원 목록 검색](#모든 구성원 목록 검색)
+
+[회원의 온라인 상태 검색](#회원의 온라인 상태 검색)
+
+[특정 순서로 구성원 및 운영자 목록 검색](#특정 순서로 구성원 및 운영자 목록 검색)
+
+[운영자 목록 검색](#운영자 목록 검색)
+
+[운영자 등록](#운영자 등록)
+
+[운영자 등록 취소](#운영자 등록 취소)
+
+[차단 또는 침묵된 사용자 목록 검색](#차단 또는 침묵된 사용자 목록 검색)
+
+[사용자 차단/해제](#사용자 차단/해제)
+
+[사용자 침묵/해제](#사용자 침묵/해제)
+
+[메세지 / 유저 / 채널 신고](#메세지 / 유저 / 채널 신고)
+
+---
+
 
 
 ## 채널 생성
@@ -101,24 +161,25 @@ groupChannel.inviteWithUserIds(userIds, new GroupChannel.GroupChannelInviteHandl
 
   (**Settings** > **Chat** > **Channels** > Group channels > Chat history on/off)
 
+
 - 그룹 채널에 멤버 초대시, 기본값은 초대 자동수락. 초대할 멤버에게 승낙 여부를 결정하게 하려면 추가 세팅이 필요함
 
-  ```java
-  boolean autoAccept = false; // The value of true (default) means that a user will automatically join a group channel with no choice of accepting and declining an invitation.
-  
-  SendBird.setChannelInvitationPreference(autoAccept, new SendBird.SetChannelInvitationPreferenceHandler() {
-      @Override
-      public void onResult(SendBirdException e) {
-          if (e != null) {
-              // Handle error.
-          }
-  
-          ...
-      }
-  });
-  ```
+```java
+boolean autoAccept = false; // The value of true (default) means that a user will automatically join a group channel with no choice of accepting and declining an invitation.
 
-  
+SendBird.setChannelInvitationPreference(autoAccept, new SendBird.SetChannelInvitationPreferenceHandler() {
+    @Override
+    public void onResult(SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        ...
+    }
+});
+```
+
+
 
 ## 초대 수락/거절
 
