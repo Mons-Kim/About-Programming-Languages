@@ -26,6 +26,10 @@ https://sendbird.com/docs/chat/v3/android/guides/group-channel-advanced#2-search
 
 [메세지에 리액션 추가](#메세지에 리액션 추가)
 
+[이전 메세지 로드](#이전 메세지 로드)
+
+[타임스탬프 또는 메시지 ID별로 메시지 로드](#타임스탬프 또는 메시지 ID별로 메시지 로드)
+
 [상위 메세지의 답장 나열메세지 검색](#상위 메세지의 답장 나열메세지 검색)
 
 [메세지 업데이트](#메세지 업데이트)
@@ -334,9 +338,151 @@ groupChannel.deleteReaction(BASE_MESSAGE, emojiKey, new BaseChannel.ReactionHand
 // the applyReactionEvent() method should be called in the channel event handler's onReactionUpdated() method.
 ```
 
+- 감지 이벤트 핸들러
+
+```java
+SendBird.addChannelHandler(UNIQUE_HANDLER_ID, new SendBird.ChannelHandler() {
+    ...
+
+    @Override
+    public void onReactionUpdated(BaseChannel channel, ReactionEvent reactionEvent) {
+        ...
+
+        // If there is a message with the reactionEvent.getMessageId(),
+        // you can apply the reaction change to the message by calling the applyReactionEvent() method.
+        message.applyReactionEvent(reactionEvent);
+
+        // Add or remove an emoji below the message on the current user's chat view.
+    }
+
+    ...
+});
+```
+
 - 리액션 기능은 현재 그룹채널에서만 가능함
 
-  
+
+
+## 이전 메세지 로드
+
+```java
+// There should only be one single instance per channel view.
+PreviousMessageListQuery listQuery = groupChannel.createPreviousMessageListQuery();
+listQuery.setIncludeMetaArray(true);    // Retrieve a list of messages along with their metaarrays.
+listQuery.setIncludeReactions(true);    // Retrieve a list of messages along with their reactions.
+...
+
+// Retrieving previous messages.
+listQuery.load(LIMIT, REVERSE, new PreviousMessageListQuery.MessageListQueryResult() {
+    @Override
+    public void onResult(List<BaseMessage> messages, SendBirdException e) {
+        if (e != null) {
+                // Handle error.
+        }
+
+        ...
+    }
+});
+```
+
+- List of arguments
+
+| Argument  | Type    | Description                                                  |
+| :-------- | :------ | :----------------------------------------------------------- |
+| `LIMIT`   | int     | 호출당 반환할 결과 수를 지정. 허용값은 1-100. 권장값은 30.   |
+| `REVERSE` | boolean | 검색된 메세지의 역순 정렬 여부 결정. If **true**, 최신순. If **false**, 오래된 순. |
+
+- List of filters
+
+| Name                | Filters...                                                   |
+| :------------------ | :----------------------------------------------------------- |
+| MessageTypeFilter   | Messages with the specified message type. The [`setMessageTypeFilter()`](https://sendbird.com/docs/chat/v3/android/ref/com/sendbird/android/PreviousMessageListQuery.html#setMessageTypeFilter-com.sendbird.android.BaseChannel.MessageTypeFilter-) method can be used to enable this filter. (ALL / USER / FILE / ADMIN) |
+| CustomTypeFilter    | Messages with the specified custom type. The [`setCustomTypeFilter()`](https://sendbird.com/docs/chat/v3/android/ref/com/sendbird/android/PreviousMessageListQuery.html#setCustomTypeFilter-java.lang.String-) method can be used to enable this filter. |
+| SenderUserIdsFilter | Messages that are sent by the specified users. The [`setSenderIdsFilter()`](https://sendbird.com/docs/chat/v3/android/ref/com/sendbird/android/PreviousMessageListQuery.html#setSenderUserIdsFilter-java.util.List-) method can be used to enable this filter. |
+
+
+
+## 타임스탬프 또는 메시지 ID별로 메시지 로드
+
+```java
+MessageListParams params = new MessageListParams();
+params.setInclusive(IS_INCLUSIVE);
+params.setPreviousResultSize(PREVIOUS_RESULT_SIZE);
+params.setNextResultSize(NEXT_RESULT_SIZE);
+params.setReverse(REVERSE);
+params.setMessageType(MESSAGE_TYPE);
+params.setCustomType(CUSTOM_TYPE);
+...
+
+groupChannel.getMessagesByTimestamp(TIMESTAMP, params, new BaseChannel.GetMessagesHandler() {
+    @Override
+    public void onResult(List<BaseMessage> messages, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // A list of previous and next messages on both sides of a specified timestamp is successfully retrieved.
+        // Through the "messages" parameter of the onResult() callback method,
+        // you can access and display the data of each message from the result list that Sendbird server has passed to the callback method.
+        List<BaseMessage> messages = messages;
+        ...
+    }
+});
+```
+
+- List of arguments
+
+| Argument           | Type    | Description                                                  |
+| :----------------- | :------ | :----------------------------------------------------------- |
+| `TIMESTAMP`        | long    | 검색의 기준점이 될 타임스탬프 지정, in [Unix milliseconds](https://en.wikipedia.org/wiki/Unix_time). |
+| `IS_INCLUSIVE`     | boolean | TIMESTAMP와 일치하는 시각에 발송된 메세지 포함여부 결정.     |
+| `PREV_RESULT_SIZE` | int     | 지정된 타임스탬프 이전에 발송된 메세지의 검색수 지정.지정된 타임스탬프와 동일한 메세지가 여러 개 있는 경우 실제 결과개수는 설정값보다 클 수 있음. |
+| `NEXT_RESULT_SIZE` | int     | 지정된 타임스탬프 이후에 발송된 메세지의 검색수 지정.지정된 타임스탬프와 동일한 메세지가 여러 개 있는 경우 실제 결과개수는 설정값보다 클 수 있음. |
+| `REVERSE`          | boolean | 검색된 메세지의 역순 정렬 여부 결정.                         |
+| `MESSAGE_TYPE`     | enum    | 메세지 필터링 유형 결정. (MessageTypeFilter.ALL / MessageTypeFilter.USER / MessageTypeFilter.FILE / MessageTypeFilter.ADMIN ) |
+| `CUSTOM_TYPE`      | string  | 검색할 메세지의 custom type 지정                             |
+
+
+
+```java
+MessageListParams params = new MessageListParams();
+params.setInclusive(IS_INCLUSIVE);
+params.setPreviousResultSize(PREVIOUS_RESULT_SIZE);
+params.setNextResultSize(NEXT_RESULT_SIZE);
+params.setReverse(REVERSE);
+params.setMessageType(MESSAGE_TYPE);
+params.setCustomType(CUSTOM_TYPE);
+...
+
+groupChannel.getMessagesByMessageId(MESSAGE_ID, params, new BaseChannel.GetMessagesHandler() {
+    @Override
+    public void onResult(List<BaseMessage> messages, SendBirdException e) {
+        if (e != null) {
+            // Handle error.
+        }
+
+        // A list of previous and next messages on both sides of a specified message ID is successfully retrieved.
+        // Through the "messages" parameter of the onResult() callback method,
+        // you can access and display the data of each message from the result list that Sendbird server has passed to the callback method.
+        List<BaseMessage> messages = messages;
+        ...
+    }
+});
+```
+
+- List of arguments
+
+| Argument           | Type    | Description                                                  |
+| :----------------- | :------ | :----------------------------------------------------------- |
+| `MESSAGE_ID`       | long    | 검색의 기준점이 될 메세지 ID 지정                            |
+| `IS_INCLUSIVE`     | boolean | 검색될 메세지에 기준점의 메세지의 포함 여부 결정             |
+| `PREV_RESULT_SIZE` | int     | 기준점이 된 메세지보다 이전에 발송된 메세지의 검색수 지정    |
+| `NEXT_RESULT_SIZE` | int     | 기준점이 된 메세지보다 이후에 발송된 메세지의 검색수 지정    |
+| `REVERSE`          | boolean | 검색된 메세지의 역순 정렬 여부 결정.                         |
+| `MESSAGE_TYPE`     | enum    | 메세지 필터링 유형 결정. (MessageTypeFilter.ALL / MessageTypeFilter.USER / MessageTypeFilter.FILE / MessageTypeFilter.ADMIN ) |
+| `CUSTOM_TYPE`      | string  | 검색할 메세지의 custom type 지정                             |
+
+
 
 ## 상위 메세지의 답장 나열
 

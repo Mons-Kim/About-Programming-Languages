@@ -164,6 +164,8 @@ groupChannel.inviteWithUserIds(userIds, new GroupChannel.GroupChannelInviteHandl
 
 - 그룹 채널에 멤버 초대시, 기본값은 초대 자동수락. 초대할 멤버에게 승낙 여부를 결정하게 하려면 추가 세팅이 필요함
 
+  (단, 해당 경우에 초대받은 유저는 초대 수락을 하기 전에는 본인이 참가한 채널리스트에서 검색되지 않음. 따로 해당 url의 채널연결과 초대 수락을 처리해야 채널리스트에 검색됨)
+
 ```java
 boolean autoAccept = false; // The value of true (default) means that a user will automatically join a group channel with no choice of accepting and declining an invitation.
 
