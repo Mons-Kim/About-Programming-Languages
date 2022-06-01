@@ -1160,5 +1160,3 @@ boolean isCanceled = groupChannel.cancelFileMessageUpload(fileMessage.getRequest
 ```
 
 
-
-## 
