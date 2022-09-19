@@ -582,7 +582,7 @@ groupChannel.getMessagesByMessageId(MESSAGE_ID, params, new BaseChannel.GetMessa
 
 
 
-## 채팅 기록 기우기
+## 채팅 기록 지우기
 
 - 유저가 참가한 그룹 채널의 채팅기록을 삭제.
 - 현재 사용자의 리스트에만 표시가 안될 뿐. Sendbird데이터베이스의 데이터가 삭제되는 것은 아님.
